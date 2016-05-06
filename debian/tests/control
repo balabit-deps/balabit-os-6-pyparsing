@@ -1,0 +1,5 @@
+Tests: import-py2
+Depends: python-pyparsing, python-all
+
+Tests: import-py3
+Depends: python3-pyparsing, python3-all

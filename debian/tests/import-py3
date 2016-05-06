@@ -1,0 +1,13 @@
+#!/bin/bash
+set -efu
+
+PYS=${PYS:-"$(py3versions -r 2>/dev/null)"}
+
+cd $ADTTMP
+for py in $PYS; do
+    echo "=== $py ==="
+    fn=$($py -c "import pyparsing; print(pyparsing.__file__)")
+    # runs some basic functions, output looks like errors but its intentional
+    $py $fn
+done
+

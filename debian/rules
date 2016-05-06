@@ -1,0 +1,50 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+# Copyright © 2002,2003 Colin Walters <walters@debian.org>
+# Copyright © 2012 Jan Dittberner <jandd@debian.org>
+
+override_dh_auto_clean:
+	find -name '*.py[co]' -print0 | xargs -0 --no-run-if-empty rm -f --
+	rm -rf build
+
+override_dh_auto_install:
+	find $(CURDIR)/debian/python{,3}-pyparsing \
+		\( -name '*.html' -o -name '*.css' -o -name '*.py' \
+			-o -name 'README' \) \
+			-type f -print0 \
+			| xargs -0 --no-run-if-empty fromdos -p --
+	set -e ; for i in `pyversions -s` ; do \
+		$$i setup.py install --install-layout=deb \
+	    --root=$(CURDIR)/debian/python-pyparsing ; \
+	done
+	set -e ; for i in `py3versions -s` ; do \
+		$$i setup.py install --install-layout=deb \
+	    --root=$(CURDIR)/debian/python3-pyparsing ; \
+	done
+
+override_dh_installexamples:
+	dh_installexamples -i -ppython-pyparsing-doc
+
+override_dh_python2:
+	dh_python2 -ppython-pyparsing
+
+override_dh_python3:
+	dh_python3 -ppython3-pyparsing
+
+override_dh_compress:
+	dh_compress -i -X.py
+
+%:
+	dh $@ --with=python2,python3 --buildsystem=python_distutils
+
+# the following rule gets the original source and creates a dfsg free
+# tarball
+get-orig-source:
+	DFSGVER=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p'); \
+	VER=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^+]+).*,\1,p'); \
+	TMPDIR=`mktemp --directory`; \
+	uscan --force-download --download-version=$$VER --destdir="$$TMPDIR"; \
+	cd "$(CURDIR)"; mv "$$TMPDIR/pyparsing_$$DFSGVER.orig.tar.gz" .; \
+	rm -rf "$$TMPDIR"
+
+.PHONY: get-orig-source
